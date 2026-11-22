@@ -1,0 +1,63 @@
+name: Deploy OldCarAdvisor (Azure App Service)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # necessário para login OIDC no Azure (sem secret de longa duração)
+  contents: read
+
+env:
+  IMAGE_NAME: oldcaradvisor
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login no Azure (OIDC federado)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login no Azure Container Registry
+        run: az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: Build e push da imagem
+        run: |
+          set -e
+          REGISTRY="${{ secrets.ACR_NAME }}.azurecr.io"
+          docker build \
+            -t "$REGISTRY/$IMAGE_NAME:${{ github.sha }}" \
+            -t "$REGISTRY/$IMAGE_NAME:latest" \
+            .
+          docker push "$REGISTRY/$IMAGE_NAME:${{ github.sha }}"
+          docker push "$REGISTRY/$IMAGE_NAME:latest"
+
+      - name: Apontar o App Service para a nova imagem
+        run: |
+          az webapp config container set \
+            --name "${{ secrets.WEBAPP_NAME }}" \
+            --resource-group "${{ secrets.RESOURCE_GROUP }}" \
+            --container-image-name "${{ secrets.ACR_NAME }}.azurecr.io/$IMAGE_NAME:${{ github.sha }}"
+
+      - name: Reiniciar o App Service
+        run: |
+          az webapp restart \
+            --name "${{ secrets.WEBAPP_NAME }}" \
+            --resource-group "${{ secrets.RESOURCE_GROUP }}"
+
+      - name: Smoke test (healthcheck)
+        run: |
+          URL="https://${{ secrets.WEBAPP_NAME }}.azurewebsites.net/_stcore/health"
+          for i in $(seq 1 10); do
+            if curl -fsS "$URL"; then echo "OK"; exit 0; fi
+            echo "Aguardando app subir... ($i/10)"; sleep 15
+          done
+          echo "Healthcheck falhou após o deploy"; exit 1

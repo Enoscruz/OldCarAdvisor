@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+logs/
+dados/vetores/
+__pycache__/
+*.pyc
+.git/
+.github/
+infra/
+sql/
+DEPLOY.md
+*.pdf
+.pytest_cache/

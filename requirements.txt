@@ -1,0 +1,21 @@
+# --- núcleo da plataforma ---
+streamlit>=1.36
+pandas>=2.0
+openpyxl>=3.1
+requests>=2.31
+python-dotenv>=1.0
+
+# --- RAG: base vetorial (LangChain + Chroma) ---
+langchain-core>=0.3
+langchain-text-splitters>=0.3
+langchain-chroma>=0.2
+chromadb>=1.0
+
+# --- orquestração da consultoria como grafo de estados ---
+langgraph>=0.2
+
+# --- busca na web (agentes de aftermarket e crônicos) ---
+ddgs>=9.0
+
+# --- Azure SQL em produção (dados e governança) ---
+pyodbc>=5.1

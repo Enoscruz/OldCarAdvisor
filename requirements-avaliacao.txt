@@ -1,0 +1,7 @@
+# Dependências de avaliação e MLOps — NÃO entram na imagem da aplicação.
+# O Dockerfile instala apenas requirements.txt; o MLflow é pesado (arrasta
+# alembic, sqlalchemy, flask) e só é necessário no desenvolvimento e no CI.
+-r requirements.txt
+
+# Tracking de experimentos da suíte de avaliação (avaliacao/executar.py --mlflow)
+mlflow>=2.14

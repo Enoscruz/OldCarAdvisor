@@ -1,0 +1,47 @@
+name: Avaliação da consultoria
+
+# Suíte determinística de consultoria: roda os casos de avaliacao/casos.py contra
+# o orquestrador em modo offline (Gemini mock, sem internet) e falha o job quando
+# a taxa de aprovação cai abaixo do limiar. O deploy (deploy.yml) depende de o
+# comportamento da plataforma continuar correto, não apenas de a imagem buildar.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  GEMINI_MODO: mock
+  INTEGRACOES_ONLINE: "false"
+  RAG_ATIVO: "true"
+  NIVEL_LOG: WARNING
+
+jobs:
+  avaliacao:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências (app + avaliação)
+        run: pip install -r requirements-avaliacao.txt
+
+      - name: Rodar a suíte de avaliação
+        run: python -m avaliacao.executar --limiar 1.0 --mlflow --json relatorios/avaliacao.json
+
+      - name: Publicar relatório de avaliação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-avaliacao
+          path: |
+            relatorios/
+            logs/mlflow.db
+          if-no-files-found: warn

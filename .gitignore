@@ -1,0 +1,35 @@
+# --- Segredos e ambiente (NUNCA versionar) ---
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# --- Artefatos de runtime / gerados ---
+logs/*
+!logs/.gitkeep
+dados/vetores/*
+!dados/vetores/.gitkeep
+mlruns/
+*.sqlite3
+*.db
+
+# --- Relatórios gerados pela suíte de avaliação ---
+relatorios/
+
+# --- Banco de auditoria local ---
+governanca.sqlite3
+
+# --- IDE / SO ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
